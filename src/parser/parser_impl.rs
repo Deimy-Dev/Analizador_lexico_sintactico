@@ -171,8 +171,30 @@ impl Parser {
     // ------------ Expresiones ------------
 
     fn parse_expression(&mut self) -> Option<Expr> {
-        self.parse_comparison()
+        self.parse_assignment()
     }
+
+    fn parse_assignment(&mut self) -> Option<Expr> {
+        let expr = self.parse_comparison()?;
+
+        if self.match_token(&Token::Assign) {
+            self.advance(); // consume '='
+            let value = self.parse_assignment()?; // permite asignaciones encadenadas
+            if let Expr::Identifier(name) = expr {
+                return Some(Expr::BinaryOp {
+                    left: Box::new(Expr::Identifier(name)),
+                    op: Token::Assign,
+                    right: Box::new(value),
+                });
+            } else {
+                println!("Error: la parte izquierda de una asignación debe ser un identificador");
+                return None;
+            }
+        }
+
+        Some(expr)
+    }
+
 
     fn parse_comparison(&mut self) -> Option<Expr> {
         let mut expr = self.parse_term()?;
