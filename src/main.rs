@@ -1,40 +1,38 @@
 mod lexer;
+mod parser;
 
 use lexer::{Lexer, Token};
+use parser::{Parser, Stmt};
 
 fn main() {
-    let input = r#"
-fn suma(a: i32, b: i32) -> i32 {
-    if a >= b && b != 0 {
-        return a + b;
-    } else {
-        return a - b;
-    }
-}
-
-// Comentario de línea
-
-/* Comentario
-   multilínea */
-
-let mensaje = "Hola mundo!";
-const PI: f64 = 3.1415;
-let arreglo = [1, 2, 3];
-"#;
+    let input = "
+        let x = 10;
+        if x > 5 {
+            return x;
+        } else {
+            return 0;
+        }
+        while x < 100 {
+            x = x + 1;
+        }
+        loop {
+            return;
+        }
+    ";
 
     let mut lexer = Lexer::new(input);
-
-    let mut tokens = Vec::new();
-    loop {
-        let token = lexer.next_token();
-        if token == Token::EOF {
-            break;
-        }
-        tokens.push(token);
-    }
+    let tokens = lexer.tokenize();
 
     println!("Tokens:");
     for token in &tokens {
         println!("{:?}", token);
+    }
+
+    let mut parser = Parser::new(tokens);
+    let ast = parser.parse();
+
+    println!("\nAST:");
+    for stmt in ast {
+        println!("{:#?}", stmt);
     }
 }
