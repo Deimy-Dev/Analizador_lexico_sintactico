@@ -4,10 +4,16 @@ use crate::lexer::Token;
 pub enum Expr {
     Number(i64),
     Identifier(String),
+    StringLiteral(String),
+    Float(f64),
     BinaryOp {
         left: Box<Expr>,
         op: Token,
         right: Box<Expr>,
+    },
+    Call {
+        function: String,
+        argument: Box<Expr>,
     },
 }
 

@@ -6,19 +6,11 @@ use parser::{Parser, Stmt};
 
 fn main() {
     let input = "
-        let x = 10;
-        if x > 5 {
-            return x;
-        } else {
-            return 0;
-        }
-        while x < 100 {
-            x = x + 1;
-        }
-        loop {
-            return;
-        }
-    ";
+if x > 5 {
+    return x;
+}
+";
+
 
     let mut lexer = Lexer::new(input);
     let tokens = lexer.tokenize();
@@ -31,8 +23,9 @@ fn main() {
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
-    println!("\nAST:");
+    println!("\nÁrbol de Sintaxis Abstracta:");
     for stmt in ast {
         println!("{:#?}", stmt);
+        println!(" ");
     }
 }

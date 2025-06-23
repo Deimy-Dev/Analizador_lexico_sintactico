@@ -32,15 +32,22 @@ impl Parser {
             false
         }
     }
+    
+    fn skip_comments(&mut self) {
+        while matches!(self.current(), Token::Comment(_)) {
+            self.advance();
+        }
+    }
 
     pub fn parse(&mut self) -> Vec<Stmt> {
         let mut stmts = Vec::new();
         while !self.match_token(&Token::EOF) {
+            self.skip_comments();  // Salta comentarios antes de cada statement
             match self.parse_stmt() {
                 Some(stmt) => stmts.push(stmt),
                 None => {
                     println!("Saltando token: {:?}", self.current());
-                    self.advance(); // Para evitar bucles infinitos en errores
+                    self.advance();
                 }
             }
         }
@@ -48,6 +55,8 @@ impl Parser {
     }
 
     fn parse_stmt(&mut self) -> Option<Stmt> {
+        self.skip_comments();  // También salta comentarios justo antes de analizar statement
+
         match self.current() {
             Token::Let => self.parse_let_stmt(),
             Token::If => self.parse_if_stmt(),
@@ -61,6 +70,7 @@ impl Parser {
             _ => self.parse_expr_stmt(),
         }
     }
+
 
     fn parse_let_stmt(&mut self) -> Option<Stmt> {
         self.advance(); // consume 'let'
@@ -144,6 +154,7 @@ impl Parser {
         Some(Stmt::ExprStmt(expr))
     }
 
+
     fn parse_block(&mut self) -> Option<Vec<Stmt>> {
         if !self.consume(&Token::LBrace) {
             println!("Error: se esperaba '{{' para iniciar bloque, pero se encontró {:?}", self.current());
@@ -174,12 +185,13 @@ impl Parser {
         self.parse_assignment()
     }
 
+
     fn parse_assignment(&mut self) -> Option<Expr> {
-        let expr = self.parse_comparison()?;
+        let expr = self.parse_equality()?; // empieza con igualdad
 
         if self.match_token(&Token::Assign) {
             self.advance(); // consume '='
-            let value = self.parse_assignment()?; // permite asignaciones encadenadas
+            let value = self.parse_assignment()?; // recursividad para encadenar asignaciones
             if let Expr::Identifier(name) = expr {
                 return Some(Expr::BinaryOp {
                     left: Box::new(Expr::Identifier(name)),
@@ -196,14 +208,30 @@ impl Parser {
     }
 
 
+    fn parse_equality(&mut self) -> Option<Expr> {
+        let mut expr = self.parse_comparison()?;
+
+        while matches!(self.current(), Token::Equal | Token::NotEqual) {
+            let op = self.current().clone();
+            self.advance();
+            let right = self.parse_comparison()?;
+            expr = Expr::BinaryOp {
+                left: Box::new(expr),
+                op,
+                right: Box::new(right),
+            };
+        }
+
+        Some(expr)
+    }
+
     fn parse_comparison(&mut self) -> Option<Expr> {
         let mut expr = self.parse_term()?;
 
-        while matches!(self.current(), 
-            Token::GreaterThan | Token::LessThan | 
-            Token::Equal | Token::NotEqual |
-            Token::GreaterEqual | Token::LessEqual) 
-        {
+        while matches!(
+            self.current(),
+            Token::LessThan | Token::LessEqual | Token::GreaterThan | Token::GreaterEqual
+        ) {
             let op = self.current().clone();
             self.advance();
             let right = self.parse_term()?;
@@ -258,11 +286,37 @@ impl Parser {
                 self.advance();
                 Some(Expr::Number(val))
             }
+            Token::Float(f) => {
+                let val = *f;      // copia el valor primero
+                self.advance();    // ahora puedes avanzar
+                Some(Expr::Float(val))
+            }
+            Token::StringLiteral(s) => {
+                let val = s.clone();
+                self.advance();
+                Some(Expr::StringLiteral(val))  // <-- Necesitas agregar StringLiteral en enum Expr
+            }
             Token::Identifier(name) => {
                 let id = name.clone();
                 self.advance();
+
+                if self.consume(&Token::LParen) {
+                    // parsea argumentos: solo soportaremos 1 por ahora para simplificar
+                    let arg = self.parse_expression()?;
+                    if !self.consume(&Token::RParen) {
+                        println!("Error: se esperaba ')' después de argumentos");
+                        return None;
+                    }
+                    return Some(Expr::Call {
+                        function: id,
+                        argument: Box::new(arg),
+                    });
+                }
+
                 Some(Expr::Identifier(id))
             }
+
+
             Token::LParen => {
                 self.advance();
                 let expr = self.parse_expression();
