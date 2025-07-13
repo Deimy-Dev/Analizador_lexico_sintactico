@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use super::token::Token;
 
-/// Retorna un `Token` si el identificador es una palabra clave.
 pub fn lookup_keyword(ident: &str) -> Token {
     KEYWORDS.get(ident).cloned().unwrap_or(Token::Identifier(ident.to_string()))
 }
@@ -11,7 +10,7 @@ lazy_static::lazy_static! {
     static ref KEYWORDS: HashMap<&'static str, Token> = {
         let mut m = HashMap::new();
 
-        // Palabras clave tomadas de Rust
+        // Palabras clave de Rust
         m.insert("let", Token::Let);
         m.insert("mut", Token::Mut);
         m.insert("if", Token::If);

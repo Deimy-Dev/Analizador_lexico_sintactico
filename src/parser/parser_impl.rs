@@ -42,7 +42,7 @@ impl Parser {
     pub fn parse(&mut self) -> Vec<Stmt> {
         let mut stmts = Vec::new();
         while !self.match_token(&Token::EOF) {
-            self.skip_comments();  // Salta comentarios antes de cada statement
+            self.skip_comments();  // Salta comentarios 
             match self.parse_stmt() {
                 Some(stmt) => stmts.push(stmt),
                 None => {
@@ -55,7 +55,7 @@ impl Parser {
     }
 
     fn parse_stmt(&mut self) -> Option<Stmt> {
-        self.skip_comments();  // También salta comentarios justo antes de analizar statement
+        self.skip_comments();  // Salta comentarios
 
         match self.current() {
             Token::Let => self.parse_let_stmt(),
@@ -287,21 +287,20 @@ impl Parser {
                 Some(Expr::Number(val))
             }
             Token::Float(f) => {
-                let val = *f;      // copia el valor primero
-                self.advance();    // ahora puedes avanzar
+                let val = *f;      
+                self.advance();    
                 Some(Expr::Float(val))
             }
             Token::StringLiteral(s) => {
                 let val = s.clone();
                 self.advance();
-                Some(Expr::StringLiteral(val))  // <-- Necesitas agregar StringLiteral en enum Expr
+                Some(Expr::StringLiteral(val))  
             }
             Token::Identifier(name) => {
                 let id = name.clone();
                 self.advance();
 
                 if self.consume(&Token::LParen) {
-                    // parsea argumentos: solo soportaremos 1 por ahora para simplificar
                     let arg = self.parse_expression()?;
                     if !self.consume(&Token::RParen) {
                         println!("Error: se esperaba ')' después de argumentos");

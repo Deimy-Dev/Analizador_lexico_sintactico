@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 use crate::lexer::Token;
 
 #[derive(Debug, Clone)]
@@ -37,5 +38,5 @@ pub enum Stmt {
         body: Vec<Stmt>,
     },
     ReturnStmt(Option<Expr>),
-    BlockStmt(Vec<Stmt>),  // <-- agrega esto
+    BlockStmt(Vec<Stmt>), 
 }
