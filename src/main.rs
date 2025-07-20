@@ -1,46 +1,32 @@
-//Deimy Minaya 1-21-0568 
 mod lexer;
 mod parser;
 mod semantic;
+mod codegen; // recuerda crear este módulo para generación de código
 
 use lexer::Lexer;
 use parser::Parser;
 use semantic::SemanticAnalyzer;
-
+use codegen::generate_cpp;
 
 fn main() {
     let input = "
-    // inicialización
-    /* variables */
-    let y = 20.5;
-    let z = 10;
+    let a = 5;
+let b = 3.2;
+let c = a + b;
+print(c);
 
-    if (y < z) {
-        print('Menor');
-    } else {
-        print('Mayor o igual');
-    }
+    ";
 
-    while z != 0 {
-        z = z - 1;
-    }
-
-    loop {
-        return y;
-    }
-        ";
-
-
+    // Lexer
     let mut lexer = Lexer::new(input);
     let tokens = lexer.tokenize();
-    println!("");
-    println!("");
-    println!("");
-    println!("Tokens:");
+
+    println!("\nTokens:");
     for token in &tokens {
         println!("{:?}", token);
     }
 
+    // Parser
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
@@ -50,36 +36,13 @@ fn main() {
         println!(" ");
     }
 
+    // Análisis semántico
     println!("\n--- Análisis Semántico ---");
     let mut analyzer = SemanticAnalyzer::new();
     analyzer.analyze(&ast);
-    println!("");
 
+    // Generación de código C++
+    println!("\n--- Código generado en C++ ---");
+    let cpp_code = generate_cpp(&ast);
+    println!("{}", cpp_code);
 }
-
-
-
-
-
-
-
-
-
-/*
-//comentario
-    /*hola
-    hi*/
-    let x = 10;
-    if (x == 10.5) {
-        print(\"Iguales\");
-        return x;
-    } else {
-        return 0;
-    }
-    while x < 100 {
-        x = x + 1;
-    }
-    loop {
-        return;
-    }
-*/
